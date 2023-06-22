@@ -29,7 +29,10 @@
         "default": "temperature",
         "oneOf": [
           { "title": "Temperature sensor", "enum": ["temperature"] },
-          { "title": "Occupancy sensor", "enum": ["occupancy"] }
+          { "title": "Occupancy sensor", "enum": ["occupancy"] },
+          { "title": "Light sensor", "enum": ["light"] },
+          { "title": "Battery", "enum": ["battery"] },
+          { "title": "Switch", "enum": ["switch"] }
         ]
       }
     }

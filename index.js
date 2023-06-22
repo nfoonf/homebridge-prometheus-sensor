@@ -34,6 +34,28 @@ class PrometheusSensorAccessory {
           this.service.getCharacteristic(this.Characteristic.OccupancyDetected)
             .onGet(this.handleOccupancyDetectedGet.bind(this));
           break;
+        case 'light':
+          // create a new Light Sensor service
+          this.service = new this.api.hap.Service.LightSensor(this.name);
+          this.service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
+            .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
+          break;
+        case 'battery':
+          // create a new Light Sensor service
+          this.service = new this.api.hap.Service.Battery(this.name);
+          this.service.getCharacteristic(this.Characteristic.StatusLowBattery)
+            .onGet(this.handleStatusLowBatteryGet.bind(this));
+            this.service.getCharacteristic(this.Characteristic.ChargingState)
+            .onGet(this.handleChargingStateGet.bind(this));
+            this.service.getCharacteristic(this.Characteristic.BatteryLevel)
+            .onGet(this.handleBatteryLevelGet.bind(this));
+          break;
+        case 'switch':
+          // create a new Light Sensor service
+          this.service = new this.api.hap.Service.Switch(this.name);
+          this.service.getCharacteristic(this.Characteristic.On)
+            .onGet(this.handleCurrentSwitchGet.bind(this));
+          break;
       }
   }
 
@@ -51,6 +73,59 @@ class PrometheusSensorAccessory {
 
     return this.queryPrometheus().then((result) => {
       this.log.debug('OccupancyDetected is ' + result)
+      return parseInt(result);
+    });
+  }
+
+  handleCurrentAmbientLightLevelGet() {
+    this.log.debug('Triggered GET Ambient Light Level');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('AmbientLightLevel is ' + result)
+      return Number.parseFloat(result).toFixed(1);
+    });
+  }
+
+  handleStatusLowBatteryGet() {
+    this.log.debug('Triggered GET Battery Status');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('StatusLowBattery is ' + result)
+      if (parseInt(result) >= 40){
+        return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+      } else {
+        return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
+      }
+    });
+  }
+
+  handleChargingStateGet() {
+    this.log.debug('Triggered GET Battery Charging State');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('ChargingState is ' + result)
+      if (parseInt(result) >= 95){
+        return this.Characteristic.ChargingState.NOT_CHARGING;
+      } else {
+        return this.Characteristic.ChargingState.CHARGING;
+      }
+    });
+  }
+
+  handleBatteryLevelGet() {
+    this.log.debug('Triggered GET Battery Level');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('BatteryLevel is ' + result)
+      return parseInt(result);
+    });
+  }
+
+  handleCurrentSwitchGet() {
+    this.log.debug('Triggered GET Switch Status');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('SwitchStatus is ' + result)
       return parseInt(result);
     });
   }
