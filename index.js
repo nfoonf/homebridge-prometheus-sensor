@@ -41,17 +41,21 @@ class PrometheusSensorAccessory {
             .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
           break;
         case 'battery':
-          // create a new Light Sensor service
-          this.service = new this.api.hap.Service.BatteryService(this.name);
-          this.service.getCharacteristic(this.Characteristic.StatusLowBattery)
+          // create a new Battery Sensor service
+          this.service = new this.api.hap.Service.Switch(this.name);
+          this.service.getCharacteristic(this.Characteristic.On)
+            .onGet(this.handleBatterySwitchGet.bind(this));
+          //this.service = new this.api.hap.Service.BatteryService(this.name);
+          this.BatteryService = new this.api.hap.Service.BatteryService("Battery");
+          this.BatteryService.getCharacteristic(this.Characteristic.StatusLowBattery)
             .onGet(this.handleStatusLowBatteryGet.bind(this));
-            this.service.getCharacteristic(this.Characteristic.ChargingState)
+          this.BatteryService.getCharacteristic(this.Characteristic.ChargingState)
             .onGet(this.handleChargingStateGet.bind(this));
-            this.service.getCharacteristic(this.Characteristic.BatteryLevel)
+          this.BatteryService.getCharacteristic(this.Characteristic.BatteryLevel)
             .onGet(this.handleBatteryLevelGet.bind(this));
           break;
         case 'switch':
-          // create a new Light Sensor service
+          // create a new Switch service
           this.service = new this.api.hap.Service.Switch(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
             .onGet(this.handleCurrentSwitchGet.bind(this));
@@ -83,6 +87,19 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus().then((result) => {
       this.log.debug('AmbientLightLevel is ' + result)
       return Number.parseFloat(result).toFixed(1);
+    });
+  }
+
+  handleBatterySwitchGet() {
+    this.log.debug('Triggered GET Battery Switch Status');
+
+    return this.queryPrometheus().then((result) => {
+      this.log.debug('StatusLowBattery is ' + result)
+      if (parseInt(result) > 0){
+        return 1;
+      } else {
+        return 0;
+      }
     });
   }
 
