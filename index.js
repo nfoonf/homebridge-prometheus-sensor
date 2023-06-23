@@ -45,7 +45,7 @@ class PrometheusSensorAccessory {
           break;
         case 'battery':
           // create a new Battery Sensor service
-          this.service = new this.api.hap.Service.LightSensor(this.name);
+          this.service = new this.api.hap.Service.Fan(this.name);
           this.service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
             .onGet(this.handleBatterySwitchGet.bind(this));
           //this.service = new this.api.hap.Service.BatteryService(this.name);
@@ -98,7 +98,11 @@ class PrometheusSensorAccessory {
 
     return this.queryPrometheus().then((result) => {
       this.log.debug('StatusLowBattery is ' + result)
-      return Number.parseFloat(result).toFixed(1);
+      if (parseInt(result) > 0){
+        return 1;
+      } else {
+        return 0;
+      }
     });
   }
 
@@ -160,15 +164,15 @@ class PrometheusSensorAccessory {
     //];
 
     const informationService = new this.api.hap.Service.AccessoryInformation()
-			.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
-			.setCharacteristic(Characteristic.Model, this.model)
-			.setCharacteristic(Characteristic.SerialNumber, this.serial)
+			.setCharacteristic(this.Characteristic.Manufacturer, this.manufacturer)
+			.setCharacteristic(this.Characteristic.Model, this.model)
+			.setCharacteristic(this.Characteristic.SerialNumber, this.serial)
 
 		const services = [informationService]
     services.push(this.service);
 
 		if(this.batteryService) {
-						services.push(this.batteryService);
+			services.push(this.batteryService);
 		}
 
 		return services
