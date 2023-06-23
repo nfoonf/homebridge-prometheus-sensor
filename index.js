@@ -42,7 +42,7 @@ class PrometheusSensorAccessory {
           break;
         case 'battery':
           // create a new Light Sensor service
-          this.service = new this.api.hap.Service.Battery(this.name);
+          this.service = new this.api.hap.Service.BatteryService(this.name);
           this.service.getCharacteristic(this.Characteristic.StatusLowBattery)
             .onGet(this.handleStatusLowBatteryGet.bind(this));
             this.service.getCharacteristic(this.Characteristic.ChargingState)
