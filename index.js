@@ -45,8 +45,8 @@ class PrometheusSensorAccessory {
           break;
         case 'battery':
           // create a new Battery Sensor service
-          this.service = new this.api.hap.Service.Switch(this.name);
-          this.service.getCharacteristic(this.Characteristic.On)
+          this.service = new this.api.hap.Service.LightSensor(this.name);
+          this.service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
             .onGet(this.handleBatterySwitchGet.bind(this));
           //this.service = new this.api.hap.Service.BatteryService(this.name);
           this.batteryService = new this.api.hap.Service.BatteryService("Battery");
@@ -98,11 +98,7 @@ class PrometheusSensorAccessory {
 
     return this.queryPrometheus().then((result) => {
       this.log.debug('StatusLowBattery is ' + result)
-      if (parseInt(result) > 0){
-        return 1;
-      } else {
-        return 0;
-      }
+      return Number.parseFloat(result).toFixed(1);
     });
   }
 
@@ -174,7 +170,7 @@ class PrometheusSensorAccessory {
 		if(this.batteryService) {
 						services.push(this.batteryService);
 		}
-    
+
 		return services
   }
 }
