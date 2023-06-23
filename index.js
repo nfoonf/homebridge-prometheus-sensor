@@ -16,6 +16,9 @@ class PrometheusSensorAccessory {
 
       // extract configuration
       this.name = config.name;
+      this.manufacturer = config.manufacturer;
+      this.model = config.model;
+      this.serial = config.serial;
       this.url = config.url;
       this.query = config.query;
       this.type = config.type || 'temperature';
@@ -46,12 +49,12 @@ class PrometheusSensorAccessory {
           this.service.getCharacteristic(this.Characteristic.On)
             .onGet(this.handleBatterySwitchGet.bind(this));
           //this.service = new this.api.hap.Service.BatteryService(this.name);
-          this.BatteryService = new this.api.hap.Service.BatteryService("Battery");
-          this.BatteryService.getCharacteristic(this.Characteristic.StatusLowBattery)
+          this.batteryService = new this.api.hap.Service.BatteryService("Battery");
+          this.batteryService.getCharacteristic(this.Characteristic.StatusLowBattery)
             .onGet(this.handleStatusLowBatteryGet.bind(this));
-          this.BatteryService.getCharacteristic(this.Characteristic.ChargingState)
+          this.batteryService.getCharacteristic(this.Characteristic.ChargingState)
             .onGet(this.handleChargingStateGet.bind(this));
-          this.BatteryService.getCharacteristic(this.Characteristic.BatteryLevel)
+          this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
             .onGet(this.handleBatteryLevelGet.bind(this));
           break;
         case 'switch':
@@ -156,8 +159,22 @@ class PrometheusSensorAccessory {
   }
 
   getServices() {
-    return [
-      this.service
-    ];
+    //return [
+    //  this.service
+    //];
+
+    const informationService = new this.api.hap.Service.AccessoryInformation()
+			.setCharacteristic(Characteristic.Manufacturer, this.manufacturer)
+			.setCharacteristic(Characteristic.Model, this.model)
+			.setCharacteristic(Characteristic.SerialNumber, this.serial)
+
+		const services = [informationService]
+    services.push(this.service);
+
+		if(this.batteryService) {
+						services.push(this.batteryService);
+		}
+    
+		return services
   }
 }

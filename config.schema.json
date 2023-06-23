@@ -17,6 +17,24 @@
         "required": true,
         "placeholder": "https://prometheus.example.com"
       },
+      "manufacturer": {
+        "title": "Manufacturer of the device",
+        "type": "string",
+        "required": false,
+        "placeholder": "Solarman"
+      },
+      "model": {
+        "title": "Model of the device",
+        "type": "string",
+        "required": false,
+        "placeholder": "Inverter"
+      },
+      "serial": {
+        "title": "Serial # of the device",
+        "type": "string",
+        "required": false,
+        "placeholder": "solarman-inverter-1"
+      },
       "query": {
         "title": "Prometheus query to fetch value",
         "type": "string",
