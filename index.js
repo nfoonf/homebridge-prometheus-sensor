@@ -50,7 +50,7 @@ class PrometheusSensorAccessory {
           // create a new Light Bulb service
           this.service = new this.api.hap.Service.Lightbulb(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
-            .onGet(this.handleCurrentSwitchGet.bind(this));
+            .onGet(this.handleLightSwitchGet.bind(this));
 
           // create a new Light Sensor service
           this.lightSensorService = new this.api.hap.Service.LightSensor("LightSensor");
@@ -100,7 +100,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET CurrentTemperature');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('CurrentTemperature is ' + result)
+      this.log('CurrentTemperature is ' + result)
       return Number.parseFloat(result).toFixed(1);
     });
   }
@@ -109,8 +109,21 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET OccupancyDetected');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('OccupancyDetected is ' + result)
+      this.log('OccupancyDetected is ' + result)
       return parseInt(result);
+    });
+  }
+
+  handleLightSwitchGet() {
+    this.log.debug('Triggered GET Ambient Light Level');
+
+    return this.queryPrometheus(this.query).then((result) => {
+      this.log('AmbientLightLevel is ' + result)
+      if (parseInt(result) > 0){
+        return 1;
+      } else {
+        return 0;
+      };
     });
   }
 
@@ -118,7 +131,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Ambient Light Level');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('AmbientLightLevel is ' + result)
+      this.log('Ambient Light Level is ' + result)
       return Number.parseFloat(result).toFixed(1);
     });
   }
@@ -127,7 +140,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Battery Switch Status');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('StatusLowBattery is ' + result)
+      this.log('Battery Switch Status is ' + result)
       if (parseInt(result) > 0){
         return 1;
       } else {
@@ -137,10 +150,10 @@ class PrometheusSensorAccessory {
   }
 
   handleBatteryRotationSpeedGet() {
-    this.log.debug('Triggered GET Battery Level');
+    this.log.debug('Triggered GET Battery %');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('BatteryLevel is ' + result)
+      this.log('Battery % is ' + result)
       return parseInt(result);
     });
   }
@@ -149,7 +162,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Battery Status');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('StatusLowBattery is ' + result)
+      this.log('Battery Status is ' + result)
       if (parseInt(result) >= 40){
         return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
       } else {
@@ -162,7 +175,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Battery Charging State');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('ChargingState is ' + result)
+      this.log('Battery Charging State is ' + result)
       if (parseInt(result) >= 95){
         return this.Characteristic.ChargingState.NOT_CHARGING;
       } else {
@@ -175,7 +188,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Battery Level');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('BatteryLevel is ' + result)
+      this.log('BatteryLevel is ' + result)
       return parseInt(result);
     });
   }
@@ -184,7 +197,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Battery CurrentTemperature');
 
     return this.queryPrometheus(this.batteryTempQuery).then((result) => {
-      this.log.debug('CurrentTemperature is ' + result)
+      this.log('Battery Temperature is ' + result)
       return Number.parseFloat(result).toFixed(1);
     });
   }
@@ -193,7 +206,7 @@ class PrometheusSensorAccessory {
     this.log.debug('Triggered GET Switch Status');
 
     return this.queryPrometheus(this.query).then((result) => {
-      this.log.debug('SwitchStatus is ' + result)
+      this.log('Switch Status is ' + result)
       return parseInt(result);
     });
   }
