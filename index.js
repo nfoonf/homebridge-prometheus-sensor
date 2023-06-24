@@ -11,17 +11,24 @@ class PrometheusSensorAccessory {
       this.config = config;
       this.api = api;
 
-      this.Service = this.api.hap.Service;
+      this.services = [];
+      //this.service = this.api.hap.Service;
       this.Characteristic = this.api.hap.Characteristic;
 
       // extract configuration
       this.name = config.name;
-      this.manufacturer = config.manufacturer;
-      this.model = config.model;
-      this.serial = config.serial;
+      // this.manufacturer = config.manufacturer;
+      // this.model = config.model;
+      // this.serial = config.serial;
       this.url = config.url;
       this.query = config.query;
       this.type = config.type || 'temperature';
+
+      this.informationService = new this.api.hap.Service.AccessoryInformation()
+        .setCharacteristic(this.Characteristic.Manufacturer, config.manufacturer)
+        .setCharacteristic(this.Characteristic.Model, config.model)
+        .setCharacteristic(this.Characteristic.SerialNumber, config.serial);
+      this.services.push(this.informationService);
 
       this.log.warn(this.type)
       switch(this.type) {
@@ -30,25 +37,32 @@ class PrometheusSensorAccessory {
           this.service = new this.api.hap.Service.TemperatureSensor(this.name);
           this.service.getCharacteristic(this.Characteristic.CurrentTemperature)
             .onGet(this.handleCurrentTemperatureGet.bind(this));
+          this.services.push(this.service);
           break;
         case 'occupancy':
           // create a new Occupancy Sensor service
           this.service = new this.api.hap.Service.OccupancySensor(this.name);
           this.service.getCharacteristic(this.Characteristic.OccupancyDetected)
             .onGet(this.handleOccupancyDetectedGet.bind(this));
+          this.services.push(this.service);
           break;
         case 'light':
+          let result = parseInt(this.queryPrometheus());
           // create a new Light Sensor service
-          this.service = new this.api.hap.Service.LightSensor(this.name);
-          this.service.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
+          this.service = new this.api.hap.Service.Lightbulb(this.name);
+          this.service.getCharacteristic(this.Characteristic.On).updateValue((result > 0) ? 1 : 0);
+          this.lightSensorService = new this.api.hap.Service.LightSensor("LightSensor");
+          this.lightSensorService.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
             .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
+          this.services.push(this.service);
+          this.services.push(this.lightSensorService);
           break;
         case 'battery':
           // create a new Battery Sensor service
           this.service = new this.api.hap.Service.Fan(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
             .onGet(this.handleBatterySwitchGet.bind(this));
-            this.service.getCharacteristic(this.Characteristic.RotationSpeed)
+          this.service.getCharacteristic(this.Characteristic.RotationSpeed)
             .onGet(this.handleBatteryRotationSpeedGet.bind(this));
           //this.service = new this.api.hap.Service.BatteryService(this.name);
           this.batteryService = new this.api.hap.Service.BatteryService("Battery");
@@ -58,12 +72,16 @@ class PrometheusSensorAccessory {
             .onGet(this.handleChargingStateGet.bind(this));
           this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
             .onGet(this.handleBatteryLevelGet.bind(this));
+          
+          this.services.push(this.service);
+          this.services.push(this.batteryService);
           break;
         case 'switch':
           // create a new Switch service
           this.service = new this.api.hap.Service.Switch(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
             .onGet(this.handleCurrentSwitchGet.bind(this));
+          this.services.push(this.service);
           break;
       }
   }
@@ -174,18 +192,18 @@ class PrometheusSensorAccessory {
     //  this.service
     //];
 
-    const informationService = new this.api.hap.Service.AccessoryInformation()
-			.setCharacteristic(this.Characteristic.Manufacturer, this.manufacturer)
-			.setCharacteristic(this.Characteristic.Model, this.model)
-			.setCharacteristic(this.Characteristic.SerialNumber, this.serial)
+    //const informationService = new this.api.hap.Service.AccessoryInformation()
+		//	.setCharacteristic(this.Characteristic.Manufacturer, this.manufacturer)
+		//	.setCharacteristic(this.Characteristic.Model, this.model)
+		//	.setCharacteristic(this.Characteristic.SerialNumber, this.serial);
 
-		const services = [informationService]
-    services.push(this.service);
+		//const services = [informationService];
+    //services.push(this.service);
 
-		if(this.batteryService) {
-			services.push(this.batteryService);
-		}
+		//if(this.batteryService) {
+		//	services.push(this.batteryService);
+		//}
 
-		return services
+		return this.services;
   }
 }
