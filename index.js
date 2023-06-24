@@ -12,23 +12,22 @@ class PrometheusSensorAccessory {
       this.api = api;
 
       this.services = [];
-      //this.service = this.api.hap.Service;
       this.Characteristic = this.api.hap.Characteristic;
 
       // extract configuration
       this.name = config.name;
-      // this.manufacturer = config.manufacturer;
-      // this.model = config.model;
-      // this.serial = config.serial;
+      this.manufacturer = config.manufacturer;
+      this.model = config.model;
+      this.serial = config.serial;
       this.url = config.url;
       this.query = config.query;
       this.type = config.type || 'temperature';
       this.batteryTempQuery = config.batteryTemperatureQuery;
 
       this.informationService = new this.api.hap.Service.AccessoryInformation()
-        .setCharacteristic(this.Characteristic.Manufacturer, config.manufacturer)
-        .setCharacteristic(this.Characteristic.Model, config.model)
-        .setCharacteristic(this.Characteristic.SerialNumber, config.serial);
+        .setCharacteristic(this.Characteristic.Manufacturer, this.manufacturer)
+        .setCharacteristic(this.Characteristic.Model, this.model)
+        .setCharacteristic(this.Characteristic.SerialNumber, this.serial);
       this.services.push(this.informationService);
 
       this.log.warn(this.type)
@@ -48,45 +47,41 @@ class PrometheusSensorAccessory {
           this.services.push(this.service);
           break;
         case 'light':
-          let lightResult = parseInt(this.queryPrometheus(this.query));
-          // create a new Light Sensor service
+          // create a new Light Bulb service
           this.service = new this.api.hap.Service.Lightbulb(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
-            .updateValue((lightResult > 0) ? 0 : 1);
+            .onGet(this.handleCurrentSwitchGet.bind(this));
 
+          // create a new Light Sensor service
           this.lightSensorService = new this.api.hap.Service.LightSensor("LightSensor");
           this.lightSensorService.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
-            // .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
-            .updateValue(Number.parseFloat(lightResult).toFixed(1));
-            
+            .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
 
+          // Add services
           this.services.push(this.service);
           this.services.push(this.lightSensorService);
           break;
         case 'battery':
-          let batteryResult = parseInt(this.queryPrometheus(this.query));
           // create a new Battery Sensor service
           this.service = new this.api.hap.Service.Fan(this.name);
           this.service.getCharacteristic(this.Characteristic.On)
-            .onGet(this.handleBatterySwitchGet.bind(this, batteryResult));
+            .onGet(this.handleBatterySwitchGet.bind(this));
           this.service.getCharacteristic(this.Characteristic.RotationSpeed)
-          // .onGet(this.handleBatteryRotationSpeedGet.bind(this, batteryResult));  
-            .updateValue(parseInt(batteryResult));
+            .onGet(this.handleBatteryRotationSpeedGet.bind(this));  
             
-          
           this.batteryService = new this.api.hap.Service.BatteryService("Battery");
           this.batteryService.getCharacteristic(this.Characteristic.StatusLowBattery)
-            .onGet(this.handleStatusLowBatteryGet.bind(this, batteryResult));
+            .onGet(this.handleStatusLowBatteryGet.bind(this));
           this.batteryService.getCharacteristic(this.Characteristic.ChargingState)
-            .onGet(this.handleChargingStateGet.bind(this, batteryResult));
+            .onGet(this.handleChargingStateGet.bind(this));
           this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
-            // .onGet(this.handleBatteryLevelGet.bind(this, batteryResult));
-            .updateValue(parseInt(batteryResult));
+            .onGet(this.handleBatteryLevelGet.bind(this));
           
           this.temperatureService = new this.api.hap.Service.TemperatureSensor("BatteryTemperature");
           this.temperatureService.getCharacteristic(this.Characteristic.CurrentTemperature)
             .onGet(this.handleBatteryTemperatureGet.bind(this));
 
+          // Add services
           this.services.push(this.service);
           this.services.push(this.batteryService);
           this.services.push(this.temperatureService);
@@ -128,20 +123,20 @@ class PrometheusSensorAccessory {
     });
   }
 
-  handleBatterySwitchGet(value) {
+  handleBatterySwitchGet() {
     this.log.debug('Triggered GET Battery Switch Status');
 
-    //return this.queryPrometheus().then((result) => {
-    this.log.debug('StatusLowBattery is ' + value)
-    if (parseInt(value) > 0){
-      return 1;
-    } else {
-      return 0;
-    };
-    // });
+    return this.queryPrometheus(this.query).then((result) => {
+      this.log.debug('StatusLowBattery is ' + result)
+      if (parseInt(result) > 0){
+        return 1;
+      } else {
+        return 0;
+      };
+    });
   }
 
-  handleBatteryRotationSpeedGet(value) {
+  handleBatteryRotationSpeedGet() {
     this.log.debug('Triggered GET Battery Level');
 
     return this.queryPrometheus(this.query).then((result) => {
@@ -150,30 +145,30 @@ class PrometheusSensorAccessory {
     });
   }
 
-  handleStatusLowBatteryGet(value) {
+  handleStatusLowBatteryGet() {
     this.log.debug('Triggered GET Battery Status');
 
-    // return this.queryPrometheus().then((result) => {
-    this.log.debug('StatusLowBattery is ' + value)
-    if (parseInt(value) >= 40){
-      return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
-    } else {
-      return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
-    };
-    // });
+    return this.queryPrometheus(this.query).then((result) => {
+      this.log.debug('StatusLowBattery is ' + result)
+      if (parseInt(result) >= 40){
+        return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+      } else {
+        return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
+      };
+    });
   }
 
-  handleChargingStateGet(value) {
+  handleChargingStateGet() {
     this.log.debug('Triggered GET Battery Charging State');
 
-    // return this.queryPrometheus().then((result) => {
-    this.log.debug('ChargingState is ' + value)
-    if (parseInt(value) >= 95){
-      return this.Characteristic.ChargingState.NOT_CHARGING;
-    } else {
-      return this.Characteristic.ChargingState.CHARGING;
-    };
-    // });
+    return this.queryPrometheus(this.query).then((result) => {
+      this.log.debug('ChargingState is ' + result)
+      if (parseInt(result) >= 95){
+        return this.Characteristic.ChargingState.NOT_CHARGING;
+      } else {
+        return this.Characteristic.ChargingState.CHARGING;
+      };
+    });
   }
 
   handleBatteryLevelGet() {
