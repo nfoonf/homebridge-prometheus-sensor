@@ -23,6 +23,7 @@ class PrometheusSensorAccessory {
       this.url = config.url;
       this.query = config.query;
       this.type = config.type || 'temperature';
+      this.batteryTempQuery = config.batteryTemperatureQuery;
 
       this.informationService = new this.api.hap.Service.AccessoryInformation()
         .setCharacteristic(this.Characteristic.Manufacturer, config.manufacturer)
@@ -74,12 +75,13 @@ class PrometheusSensorAccessory {
           this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
             .onGet(this.handleBatteryLevelGet.bind(this));
           
-          this.temperatureSensor = new this.api.hap.Service.TemperatureSensor("BatteryTemperature");
-          this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
-            .onGet(this.handleBatteryLevelGet.bind(this));
+          this.temperatureService = new this.api.hap.Service.TemperatureSensor("BatteryTemperature");
+          this.temperatureService.getCharacteristic(this.Characteristic.CurrentTemperature)
+            .onGet(this.handleBatteryTemperatureGet.bind(this));
 
           this.services.push(this.service);
           this.services.push(this.batteryService);
+          this.services.push(this.temperatureService);
           break;
         case 'switch':
           // create a new Switch service
@@ -172,6 +174,15 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus().then((result) => {
       this.log.debug('BatteryLevel is ' + result)
       return parseInt(result);
+    });
+  }
+
+  handleBatteryTemperatureGet() {
+    this.log.debug('Triggered GET CurrentTemperature');
+
+    return this.queryPrometheus(batteryTempQuery).then((result) => {
+      this.log.debug('CurrentTemperature is ' + result)
+      return Number.parseFloat(result).toFixed(1);
     });
   }
 

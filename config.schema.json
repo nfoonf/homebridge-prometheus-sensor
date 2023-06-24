@@ -53,7 +53,7 @@
           { "title": "Switch", "enum": ["switch"] }
         ]
       },
-      "batteryTemperature": {
+      "batteryTemperatureQuery": {
         "title": "Prometheus Battery Temperate query to fetch value",
         "type": "string",
         "condition": {
