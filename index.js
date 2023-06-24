@@ -51,10 +51,15 @@ class PrometheusSensorAccessory {
           let lightResult = parseInt(this.queryPrometheus(this.query));
           // create a new Light Sensor service
           this.service = new this.api.hap.Service.Lightbulb(this.name);
-          this.service.getCharacteristic(this.Characteristic.On).updateValue((result > 0) ? 0 : 1);
+          this.service.getCharacteristic(this.Characteristic.On)
+            .updateValue((lightResult > 0) ? 0 : 1);
+
           this.lightSensorService = new this.api.hap.Service.LightSensor("LightSensor");
           this.lightSensorService.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
-            .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
+            // .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
+            .updateValue(Number.parseFloat(lightResult).toFixed(1));
+            
+
           this.services.push(this.service);
           this.services.push(this.lightSensorService);
           break;
