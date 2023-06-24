@@ -181,7 +181,7 @@ class PrometheusSensorAccessory {
   }
 
   handleBatteryTemperatureGet() {
-    this.log('Triggered GET Battery CurrentTemperature');
+    this.log.debug('Triggered GET Battery CurrentTemperature');
 
     return this.queryPrometheus(this.batteryTempQuery).then((result) => {
       this.log.debug('CurrentTemperature is ' + result)
