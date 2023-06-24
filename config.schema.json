@@ -52,6 +52,13 @@
           { "title": "Battery", "enum": ["battery"] },
           { "title": "Switch", "enum": ["switch"] }
         ]
+      },
+      "batteryTemperature": {
+        "title": "Prometheus Battery Temperate query to fetch value",
+        "type": "string",
+        "condition": {
+          "functionBody": "return model.type === 'battery';"
+        }
       }
     }
   }

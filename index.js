@@ -50,7 +50,7 @@ class PrometheusSensorAccessory {
           let result = parseInt(this.queryPrometheus());
           // create a new Light Sensor service
           this.service = new this.api.hap.Service.Lightbulb(this.name);
-          this.service.getCharacteristic(this.Characteristic.On).updateValue((result > 0) ? 1 : 0);
+          this.service.getCharacteristic(this.Characteristic.On).updateValue((result > 0) ? 0 : 1);
           this.lightSensorService = new this.api.hap.Service.LightSensor("LightSensor");
           this.lightSensorService.getCharacteristic(this.Characteristic.CurrentAmbientLightLevel)
             .onGet(this.handleCurrentAmbientLightLevelGet.bind(this));
@@ -65,6 +65,7 @@ class PrometheusSensorAccessory {
           this.service.getCharacteristic(this.Characteristic.RotationSpeed)
             .onGet(this.handleBatteryRotationSpeedGet.bind(this));
           //this.service = new this.api.hap.Service.BatteryService(this.name);
+          
           this.batteryService = new this.api.hap.Service.BatteryService("Battery");
           this.batteryService.getCharacteristic(this.Characteristic.StatusLowBattery)
             .onGet(this.handleStatusLowBatteryGet.bind(this));
@@ -73,6 +74,10 @@ class PrometheusSensorAccessory {
           this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
             .onGet(this.handleBatteryLevelGet.bind(this));
           
+          this.temperatureSensor = new this.api.hap.Service.TemperatureSensor("BatteryTemperature");
+          this.batteryService.getCharacteristic(this.Characteristic.BatteryLevel)
+            .onGet(this.handleBatteryLevelGet.bind(this));
+
           this.services.push(this.service);
           this.services.push(this.batteryService);
           break;
@@ -179,8 +184,9 @@ class PrometheusSensorAccessory {
     });
   }
 
-  queryPrometheus() {
-    let url = this.url + "/api/v1/query?query=" + this.query;
+  queryPrometheus(query) {
+    query = typeof query !== 'undefined' ? query : this.query;
+    let url = this.url + "/api/v1/query?query=" + query;
     const response = axios.get(url)
     return response.then((response) => {
       return response.data["data"]["result"][0]["value"][1];
