@@ -51,6 +51,7 @@
           { "title": "Light sensor", "enum": ["light"] },
           { "title": "Battery", "enum": ["battery"] },
           { "title": "Switch", "enum": ["switch"] }
+          { "title": "Humidity sensor", "enum": ["humidity"] }
         ]
       },
       "batteryTemperatureQuery": {

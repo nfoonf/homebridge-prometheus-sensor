@@ -39,6 +39,13 @@ class PrometheusSensorAccessory {
             .onGet(this.handleCurrentTemperatureGet.bind(this));
           this.services.push(this.service);
           break;
+        case 'humidity':
+            // create a new humidity Sensor service
+            this.service = new this.api.hap.ServiceHumiditySensor(this.name);
+            this.service.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
+              .onGet(this.handleCurrentHumidityGet.bind(this));
+            this.services.push(this.service);
+            break;  
         case 'occupancy':
           // create a new Occupancy Sensor service
           this.service = new this.api.hap.Service.OccupancySensor(this.name);
@@ -101,6 +108,15 @@ class PrometheusSensorAccessory {
 
     return this.queryPrometheus(this.query).then((result) => {
       this.log('CurrentTemperature is ' + result)
+      return Number.parseFloat(result).toFixed(1);
+    });
+  }
+
+  handleCurrentHumidityGet() {
+    this.log.debug('Triggered GET CurrentHumidity');
+
+    return this.queryPrometheus(this.query).then((result) => {
+      this.log('CurrentHumidity is ' + result)
       return Number.parseFloat(result).toFixed(1);
     });
   }
