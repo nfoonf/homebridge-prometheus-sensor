@@ -1,6 +1,6 @@
 {
   "name": "homebridge-prometheus-sensor",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A homebridge plugin to fetch sensor data from prometheus",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,8 @@
     "prometheus"
   ],
   "engines": {
-    "node": ">4.0.0",
-    "homebridge": ">=0.2.0"
+    "node": ">=18.0.0",
+    "homebridge": ">=1.6.0"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,6 @@
   "author": "Jonas Keidel",
   "license": "MIT",
   "dependencies": {
-    "axios": "^1.4.0"
+    "axios": "^1.7.9"
   }
 }

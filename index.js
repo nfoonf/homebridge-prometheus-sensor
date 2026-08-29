@@ -41,7 +41,7 @@ class PrometheusSensorAccessory {
           break;
         case 'humidity':
             // create a new humidity Sensor service
-            this.service = new this.api.hap.ServiceHumiditySensor(this.name);
+            this.service = new this.api.hap.Service.HumiditySensor(this.name);
             this.service.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
               .onGet(this.handleCurrentHumidityGet.bind(this));
             this.services.push(this.service);
@@ -109,6 +109,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('CurrentTemperature is ' + result)
       return Number.parseFloat(result).toFixed(1);
+    }).catch((error) => {
+      this.log.error('Error fetching temperature:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -118,6 +121,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('CurrentHumidity is ' + result)
       return Number.parseFloat(result).toFixed(1);
+    }).catch((error) => {
+      this.log.error('Error fetching humidity:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -127,6 +133,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('OccupancyDetected is ' + result)
       return parseInt(result);
+    }).catch((error) => {
+      this.log.error('Error fetching occupancy:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -140,6 +149,9 @@ class PrometheusSensorAccessory {
       } else {
         return 0;
       };
+    }).catch((error) => {
+      this.log.error('Error fetching light switch status:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -149,6 +161,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('Ambient Light Level is ' + result)
       return Number.parseFloat(result).toFixed(1);
+    }).catch((error) => {
+      this.log.error('Error fetching ambient light level:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -162,6 +177,9 @@ class PrometheusSensorAccessory {
       } else {
         return 0;
       };
+    }).catch((error) => {
+      this.log.error('Error fetching battery switch status:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -171,6 +189,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('Battery % is ' + result)
       return parseInt(result);
+    }).catch((error) => {
+      this.log.error('Error fetching battery rotation speed:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -184,6 +205,9 @@ class PrometheusSensorAccessory {
       } else {
         return this.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW;
       };
+    }).catch((error) => {
+      this.log.error('Error fetching battery status:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -197,6 +221,9 @@ class PrometheusSensorAccessory {
       } else {
         return this.Characteristic.ChargingState.CHARGING;
       };
+    }).catch((error) => {
+      this.log.error('Error fetching charging state:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -206,6 +233,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('BatteryLevel is ' + result)
       return parseInt(result);
+    }).catch((error) => {
+      this.log.error('Error fetching battery level:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -215,6 +245,9 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.batteryTempQuery).then((result) => {
       this.log('Battery Temperature is ' + result)
       return Number.parseFloat(result).toFixed(1);
+    }).catch((error) => {
+      this.log.error('Error fetching battery temperature:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
@@ -224,15 +257,36 @@ class PrometheusSensorAccessory {
     return this.queryPrometheus(this.query).then((result) => {
       this.log('Switch Status is ' + result)
       return parseInt(result);
+    }).catch((error) => {
+      this.log.error('Error fetching switch status:', error.message);
+      throw new this.api.hap.HapStatusError(this.api.hap.HAPStatus.SERVICE_COMMUNICATION_FAILURE);
     });
   }
 
-  queryPrometheus(query) {
+  async queryPrometheus(query, retries = 3, delay = 1000) {
     let url = this.url + "/api/v1/query?query=" + query;
-    const response = axios.get(url)
-    return response.then((response) => {
-      return response.data["data"]["result"][0]["value"][1];
-    })
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const response = await axios.get(url, { timeout: 5000 });
+        return response.data["data"]["result"][0]["value"][1];
+      } catch (error) {
+        const isLastAttempt = attempt === retries;
+        const isRetryableError = error.code === 'ECONNREFUSED' || 
+                                  error.code === 'ENOTFOUND' || 
+                                  error.code === 'ETIMEDOUT' ||
+                                  error.code === 'ECONNRESET' ||
+                                  (error.response && error.response.status >= 500);
+        
+        if (isLastAttempt || !isRetryableError) {
+          throw error;
+        }
+        
+        this.log.warn(`Prometheus query attempt ${attempt}/${retries} failed: ${error.message}. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      }
+    }
   }
 
   getServices() {
